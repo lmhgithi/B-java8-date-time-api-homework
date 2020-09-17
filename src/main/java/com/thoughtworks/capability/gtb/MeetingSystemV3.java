@@ -1,6 +1,6 @@
 package com.thoughtworks.capability.gtb;
 
-import java.time.LocalDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -16,26 +16,37 @@ import java.time.format.DateTimeFormatter;
  * @create 2020-05-19_18:43
  */
 public class MeetingSystemV3 {
+  private static final ZoneId LONDON_ZONE_ID = ZoneId.of("Europe/London");
+  private static final ZoneId CHICAGO_ZONE_ID = ZoneId.of("America/Chicago");
+  private static final ZoneId BEIJING_ZONE_ID = ZoneId.of("Asia/Shanghai");
+
 
   public static void main(String[] args) {
     String timeStr = "2020-04-01 14:30:00";
-
+//    String timeStr = "2020-10-01 14:30:00";
     // 根据格式创建格式化类
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     // 从字符串解析得到会议时间
     LocalDateTime meetingTime = LocalDateTime.parse(timeStr, formatter);
 
-    LocalDateTime now = LocalDateTime.now();
+    ZonedDateTime londonDateTime = ZonedDateTime.of(meetingTime, LONDON_ZONE_ID);
+    LocalDateTime now = LocalDateTime.now(BEIJING_ZONE_ID);
+
     if (now.isAfter(meetingTime)) {
       LocalDateTime tomorrow = now.plusDays(1);
       int newDayOfYear = tomorrow.getDayOfYear();
-      meetingTime = meetingTime.withDayOfYear(newDayOfYear);
+
+      londonDateTime = londonDateTime.withDayOfYear(newDayOfYear);
+      LocalDateTime chicagoMeetingTime = londonDateTime.withZoneSameInstant(CHICAGO_ZONE_ID).toLocalDateTime();
 
       // 格式化新会议时间
-      String showTimeStr = formatter.format(meetingTime);
-      System.out.println(showTimeStr);
+      String showTimeStr = formatter.format(chicagoMeetingTime);
+      System.out.println("新会议时间为:" + showTimeStr);
     } else {
-      System.out.println("会议还没开始呢");
+      LocalDateTime chicagoMeetingTime = londonDateTime.withZoneSameInstant(CHICAGO_ZONE_ID).toLocalDateTime();
+      Period period = Period.between(now.toLocalDate(), meetingTime.toLocalDate());
+      System.out.println("距离会议开始还有 " + period.getDays() + "天");
+      System.out.println("会议的芝加哥时间为 " + formatter.format(chicagoMeetingTime));
     }
   }
 }
